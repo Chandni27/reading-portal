@@ -2,13 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+import os
 
 from core.database import engine, Base
 from routers import auth, books, assignments, students, dashboard
 from core.seed import seed_data
 
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+BOOKS_DIR = os.path.join(STATIC_DIR, "books")
+os.makedirs(BOOKS_DIR, exist_ok=True)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Drop and recreate all tables cleanly on every deploy
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     seed_data()
     yield
@@ -17,13 +24,13 @@ app = FastAPI(title="Reading Portal API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://*.onrender.com", "https://*.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(books.router, prefix="/api/v1/books", tags=["books"])

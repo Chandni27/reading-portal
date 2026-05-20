@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from core.config import settings
 from core.database import get_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12, truncate_error=False)
-
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer()
 
 def hash_password(password: str) -> str:
